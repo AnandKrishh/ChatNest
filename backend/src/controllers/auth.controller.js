@@ -1,7 +1,7 @@
 import { generateToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import cloudinary from "../lib/cloudinary.js";
+import { uploadFromBuffer } from "../lib/cloudinary.js";
 
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -87,23 +87,29 @@ export const logout = (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { profilePic } = req.body;
     const userId = req.user._id;
 
-    if (!profilePic) {
-      return res.status(400).json({ message: "Profile pic is required" });
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
     }
 
-    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    // upload buffer to Cloudinary
+    const uploadResponse = await uploadFromBuffer(req.file.buffer, {
+      folder: "chatnest/avatars",
+    });
+
+    const imageUrl = uploadResponse.secure_url;
+
+    // update user with new avatar URL
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { profilePic: uploadResponse.secure_url },
+      { profilePic: imageUrl },
       { new: true }
     );
 
     res.status(200).json(updatedUser);
   } catch (error) {
-    console.log("error in update profile:", error);
+    console.log("error in updateProfile:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

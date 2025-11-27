@@ -10,15 +10,12 @@ const ProfilePage = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
+    // preview using object URL
+    const previewUrl = URL.createObjectURL(file);
+    setSelectedImg(previewUrl);
 
-    reader.readAsDataURL(file);
-
-    reader.onload = async () => {
-      const base64Image = reader.result;
-      setSelectedImg(base64Image);
-      await updateProfile({ profilePic: base64Image });
-    };
+    // send File directly — NOT base64
+    await updateProfile({ avatar: file });
   };
 
   return (

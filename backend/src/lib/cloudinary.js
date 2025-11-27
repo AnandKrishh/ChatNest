@@ -1,5 +1,4 @@
 import { v2 as cloudinary } from "cloudinary";
-
 import { config } from "dotenv";
 
 config();
@@ -10,4 +9,14 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const uploadFromBuffer = (buffer, options = {}) =>
+  new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
+    });
+    stream.end(buffer);
+  });
+
 export default cloudinary;
+export { uploadFromBuffer };
